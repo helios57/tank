@@ -1,6 +1,25 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div style="text-align:center">
-  <h1>
-    Welcome to {{ title }}!
-  </h1>
+<div style="text-align: center">
+  <h1>Welcome to {{ title }}!</h1>
+  <h2>mpu: {{mpu}}</h2>
+  <h2>gps: {{gps}}</h2>
+  <h3>Zange</h3>
+  <mat-slider [min]="s10.min" [max]="s10.max" [value]="s10.value"
+              step="1" (input)="onInputChange($event.value,'10')"></mat-slider>
+  <h3>S9 - Drehung Zange</h3>
+  <mat-slider [min]="s9.min" [max]="s9.max" [value]="s9.value" step="1"
+              (input)="onInputChange($event.value,'9')"></mat-slider>
+  <h3>S8 - Neigung Zange</h3>
+  <mat-slider [min]="s8.min" [max]="s8.max" [value]="s8.value" step="1"
+              (input)="onInputChange($event.value,'8')"></mat-slider>
+  <h3>S6 - Neigung Mitte</h3>
+  <mat-slider [min]="s6.min" [max]="s6.max" [value]="s6.value" step="1"
+              (input)="onInputChange($event.value,'6')"></mat-slider>
+  <h3>S5 - Neigung Unten</h3>
+  <mat-slider [min]="s5.min" [max]="s5.max" [value]="s5.value" step="1"
+              (input)="onInputChange($event.value,'5')"></mat-slider>
+  <h3>S4 - Drehung Unten</h3>
+  <mat-slider [min]="s4.min" [max]="s4.max" [value]="s4.value" step="1"
+              (input)="onInputChange($event.value,'4')"></mat-slider>
+
 </div>

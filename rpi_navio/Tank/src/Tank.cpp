@@ -123,34 +123,41 @@ int main(int argc, char *argv[]) {
 	json gpsJson;
 	json mpuJson;
 	cout << "Start loop " << endl;
-	while (true) {
-		mpu.update();
-		mpu.read_accelerometer(&ax, &ay, &az);
-		mpu.read_gyroscope(&gx, &gy, &gz);
-		mpu.read_magnetometer(&mx, &my, &mz);
-		mpuJson["ax"] = ax;
-		mpuJson["ay"] = ay;
-		mpuJson["az"] = az;
-		mpuJson["gx"] = gx;
-		mpuJson["gy"] = gy;
-		mpuJson["gz"] = gz;
-		mpuJson["mx"] = mx;
-		mpuJson["my"] = my;
-		mpuJson["mz"] = mz;
-		client.publish(mqtt::make_message("/tank/mpu", mpuJson.dump()));
+	auto ms1000 = std::chrono::high_resolution_clock::now();
 
-		if (gps.decodeSingleMessage(Ublox::NAV_POSLLH, pos_data) == 1) {
-			gpsJson["time"] = pos_data[0] / 1000;	//"GPS Millisecond Time of Week: %.0lf s\n
-			gpsJson["longitude"] = pos_data[1] / 10000000;
-			gpsJson["latitude"] = pos_data[2] / 10000000;
-			gpsJson["height_ellipsoid"] = pos_data[3] / 1000;
-			gpsJson["height_sealevel"] = pos_data[4] / 1000;
-			gpsJson["horizontal_accuracy"] = pos_data[5] / 1000;
-			gpsJson["vertival_accuracy"] = pos_data[6] / 1000;
-			client.publish(mqtt::make_message("/tank/gps", gpsJson.dump()));
+	while (true) {
+		auto now = std::chrono::high_resolution_clock::now();
+		auto duration1000 = std::chrono::duration_cast<std::chrono::nanoseconds>(now - ms1000).count();
+		if (duration1000 > 1000000000) {
+			ms1000 = std::chrono::high_resolution_clock::now();
+			mpu.update();
+			mpu.read_accelerometer(&ax, &ay, &az);
+			mpu.read_gyroscope(&gx, &gy, &gz);
+			mpu.read_magnetometer(&mx, &my, &mz);
+			mpuJson["ax"] = ax;
+			mpuJson["ay"] = ay;
+			mpuJson["az"] = az;
+			mpuJson["gx"] = gx;
+			mpuJson["gy"] = gy;
+			mpuJson["gz"] = gz;
+			mpuJson["mx"] = mx;
+			mpuJson["my"] = my;
+			mpuJson["mz"] = mz;
+			client.publish(mqtt::make_message("/tank/mpu", mpuJson.dump()));
+
+			if (gps.decodeSingleMessage(Ublox::NAV_POSLLH, pos_data) == 1) {
+				gpsJson["time"] = pos_data[0] / 1000;	//"GPS Millisecond Time of Week: %.0lf s\n
+				gpsJson["longitude"] = pos_data[1] / 10000000;
+				gpsJson["latitude"] = pos_data[2] / 10000000;
+				gpsJson["height_ellipsoid"] = pos_data[3] / 1000;
+				gpsJson["height_sealevel"] = pos_data[4] / 1000;
+				gpsJson["horizontal_accuracy"] = pos_data[5] / 1000;
+				gpsJson["vertival_accuracy"] = pos_data[6] / 1000;
+				client.publish(mqtt::make_message("/tank/gps", gpsJson.dump()));
+			}
 		}
 		mqtt::const_message_ptr msg;
-		if (client.try_consume_message(&msg)) {
+		while (client.try_consume_message(&msg)) {
 			if (TOPIC_PWM.compare(msg->get_topic()) == 0) {
 				cout << "got on topic: " << msg->get_topic() << " message: " << msg->to_string() << endl;
 				auto pwmJson = json::parse(msg->to_string());
@@ -165,8 +172,6 @@ int main(int argc, char *argv[]) {
 				cout << "got on topic: " << msg->get_topic() << " message: " << msg->to_string() << endl;
 			}
 		}
-		//todo different loop-times
-		usleep(500000);
 	}
 
 	return 0;
